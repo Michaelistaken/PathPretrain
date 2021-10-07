@@ -754,7 +754,7 @@ class CustomLoss(nn.Module):
 
 class DiceLoss1(nn.Module):
     def __init__(self, weight=None, size_average=True):
-        super(DiceLoss, self).__init__()
+        super(DiceLoss1, self).__init__()
 
     def forward(self, inputs, targets, smooth=1):
 
