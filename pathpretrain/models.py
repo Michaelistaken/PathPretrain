@@ -407,6 +407,7 @@ class ModelTrainer:
             # y_true=y_true.argmax(dim=1)
 
             loss = self.calc_loss(y_pred, y_true.float())  # .view(-1,1)
+            loss = self.calc_loss(y_pred, y_true)  # .view(-1,1)
             train_loss = loss.item()
             running_loss += train_loss
             self.optimizer.zero_grad()
@@ -472,7 +473,6 @@ class ModelTrainer:
                 # y_true=y_true.argmax(dim=1)
                 # if save_predictions:
                 Y['true'].append(
-                    y_true.detach().cpu().numpy().astype(float).flatten())
                 y_pred_numpy = ((y_pred if self.bce else self.sigmoid(
                     y_pred)).detach().cpu().numpy()).astype(float)
                 if self.loss_fn_name in ['ce','dice','dice1','dicebce','custom']:
