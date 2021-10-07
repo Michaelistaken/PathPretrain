@@ -718,7 +718,7 @@ class CustomLoss(nn.Module):
 
     def forward(self, preds, gts, contain='single'):
         # transpose gts to channel last
-        gts = gts.permute(0, 2, 3, 1)
+        #gts = gts.permute(0, 2, 3, 1)
         gt_seg, gt_hv, gt_dot = torch.split(gts[..., :4], [1, 2, 1], dim=-1)
         pred_seg, pred_hv, pred_dot = torch.split(preds, [1, 2, 1], dim=-1)
 
