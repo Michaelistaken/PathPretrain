@@ -17,6 +17,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from sklearn.utils.class_weight import compute_class_weight
 from kornia.losses import DiceLoss
+import  kornia.losses as kl
 import tqdm
 
 matplotlib.use('Agg')
@@ -209,7 +210,8 @@ class ModelTrainer:
         # self.amp_handle = amp.init(enabled=True)
         optimizers = {'adam': torch.optim.Adam, 'sgd': torch.optim.SGD}
         loss_functions = {'bce': nn.BCEWithLogitsLoss(reduction=reduction), 'ce': nn.CrossEntropyLoss(
-            reduction=reduction), 'mse': nn.MSELoss(reduction=reduction), 'nll': nn.NLLLoss(reduction=reduction),'dice':DiceLoss(),'custom':CustomLoss()}
+            reduction=reduction), 'mse': nn.MSELoss(reduction=reduction), 
+            'nll': nn.NLLLoss(reduction=reduction),'dice':DiceLoss(),'custom':CustomLoss(), 'bfll':kl.binary_focal_loss_with_logits(),'dice1':kl.dice_loss()}
         if 'name' not in list(optimizer_opts.keys()):
             optimizer_opts['name'] = 'adam'
         self.optimizer = optimizers[optimizer_opts.pop('name')](
