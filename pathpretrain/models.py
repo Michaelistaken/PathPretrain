@@ -486,8 +486,10 @@ class ModelTrainer:
                     print("Epoch {}[{}/{}] Val Loss:{}".format(epoch, i, n_batch, val_loss))
         # if print_val_confusion and save_predictions:
         y_pred, y_true = np.hstack(Y['pred']), np.hstack(Y['true'])
-        print("y_true: " + y_true.dtype)
-        print("y_pred: " + y_pred.dtype)   
+        print("y_true: ")
+        print(y_true.dtype)
+        print("y_pred: " )
+        print(y_pred.dtype)   
         print(classification_report(y_true, y_pred))
         running_loss /= n_batch
         return running_loss, f1_score(y_true, y_pred,average='macro')
