@@ -475,7 +475,7 @@ class ModelTrainer:
                     y_true.detach().cpu().numpy().astype(int).flatten())
                 y_pred_numpy = ((y_pred if self.bce else self.sigmoid(
                     y_pred)).detach().cpu().numpy()).astype(float)
-                if self.loss_fn_name in ['ce','dice','dice1']:
+                if self.loss_fn_name in ['ce','dice','dice1','dicebce']:
                     y_pred_numpy = y_pred_numpy.argmax(axis=1)
                 Y['pred'].append(y_pred_numpy.flatten())
 
