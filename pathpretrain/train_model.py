@@ -157,7 +157,8 @@ def train_model(inputs_dir='inputs_training',
                 custom_dataset=None,
                 save_predictions=True,
                 pretrained=False,
-                save_after_n_batch=0
+                save_after_n_batch=0,
+                loss_fn='dice' 
                 ):
     assert save_metric in ['loss','f1']
     if extract_embeddings: assert predict, "Must be in prediction mode to extract embeddings"
@@ -213,7 +214,7 @@ def train_model(inputs_dir='inputs_training',
                            None if predict else dataloaders['val'],
                            optimizer_opts,
                            scheduler_opts,
-                           loss_fn='dice' if (semantic_segmentation and not class_balance) else 'ce',
+                           loss_fn=loss_fn,
                            checkpoints_dir=checkpoints_dir,
                            tensor_dataset=tensor_dataset,
                            transforms=transformers,

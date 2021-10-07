@@ -209,7 +209,7 @@ class ModelTrainer:
         # self.amp_handle = amp.init(enabled=True)
         optimizers = {'adam': torch.optim.Adam, 'sgd': torch.optim.SGD}
         loss_functions = {'bce': nn.BCEWithLogitsLoss(reduction=reduction), 'ce': nn.CrossEntropyLoss(
-            reduction=reduction), 'mse': nn.MSELoss(reduction=reduction), 'nll': nn.NLLLoss(reduction=reduction),'dice':DiceLoss()}
+            reduction=reduction), 'mse': nn.MSELoss(reduction=reduction), 'nll': nn.NLLLoss(reduction=reduction),'dice':DiceLoss(),'custom':CustomLoss()}
         if 'name' not in list(optimizer_opts.keys()):
             optimizer_opts['name'] = 'adam'
         self.optimizer = optimizers[optimizer_opts.pop('name')](
@@ -653,3 +653,95 @@ class ModelTrainer:
         """Returns pytorch model.
         """
         return self.model
+
+
+class CustomLoss(nn.Module):
+
+    def __init__(self, weights=[1, 1, 1, 2, 1, 3]):
+        # 'bce', 'mbce', 'dice', 'mse', 'msge', 'ddmse'
+        super(CustomLoss, self).__init__()
+        self.weights = np.array(weights)
+#         self.weights = self.weights / sum(self.weights)
+    
+    @staticmethod
+    def dice_loss(pred, gt, epsilon=1e-3):
+        n = 2. * torch.sum(pred * gt)
+        d = torch.sum(pred + gt)
+        return 1. - (n + epsilon) / (d + epsilon)
+    
+    @staticmethod
+    def get_gradient(maps):
+        """
+        Reference: some codes from https://github.com/vqdang/hover_net/blob/master/src/model/graph.py
+        """
+        def get_sobel_kernel(size):
+            assert size % 2 == 1, 'Must be odd, get size={}'.format(size)
+
+            h_range = np.arange(-size//2 + 1, size//2 + 1, dtype=np.float32)
+            v_range = np.arange(-size//2 + 1, size//2 + 1, dtype=np.float32)
+            h, v = np.meshgrid(h_range, v_range)
+            kernel_h = h / (h * h + v * v + 1.0e-15)
+            kernel_v = v / (h * h + v * v + 1.0e-15)
+            return kernel_h, kernel_v 
+        
+        batchsize_ = maps.shape[0]
+        hk, vk = get_sobel_kernel(5)
+        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        hk = torch.tensor(hk, requires_grad=False).view(1, 1, 5, 5).to(device)
+        vk = torch.tensor(vk, requires_grad=False).view(1, 1, 5, 5).to(device)
+
+        h = maps[..., 0].unsqueeze(1)
+        v = maps[..., 1].unsqueeze(1)
+
+        dh = F.conv2d(h, hk, padding=2).permute(0, 2, 3, 1)
+        dv = F.conv2d(v, vk, padding=2).permute(0, 2, 3, 1)
+        return torch.cat((dh, dv), axis=-1)
+
+    @staticmethod
+    def dot_distance_loss(pred_dot, pred_hv, gt_dot, gt_hv):
+        pred_dot = pred_dot >= 0.5
+        pred_focus = torch.cat((pred_dot, pred_dot), axis=-1)
+        gt_focus = torch.cat((gt_dot, gt_dot), axis=-1)
+        pred_area = pred_focus * pred_hv
+        gt_area = gt_focus * gt_hv
+        return F.mse_loss(pred_area, gt_area)
+
+    def msge_loss(self, pred, gt, focus):
+        focus = torch.cat((focus, focus), axis=-1)
+        pred_grad = self.get_gradient(pred)
+        gt_grad = self.get_gradient(gt)
+        # loss = pred_grad - gt_grad
+        # loss = focus * (loss * loss)
+        # loss = torch.sum(loss) / (torch.sum(loss) + 1.0e-8)
+        return F.mse_loss(pred_grad, gt_grad)
+        # return loss
+
+    def forward(self, preds, gts, contain='single'):
+        # transpose gts to channel last
+        gts = gts.permute(0, 2, 3, 1)
+        gt_seg, gt_hv, gt_dot = torch.split(gts[..., :4], [1, 2, 1], dim=-1)
+        pred_seg, pred_hv, pred_dot = torch.split(preds, [1, 2, 1], dim=-1)
+
+        # binary cross entropy loss
+        bce = F.binary_cross_entropy(pred_seg, gt_seg)
+        # masked binary cross entropy loss
+        mbce = F.binary_cross_entropy(pred_dot * gt_dot, gt_dot) * 3 + F.binary_cross_entropy(pred_dot, gt_dot)
+        # mbce = F.binary_cross_entropy(pred_dot, gt_dot)
+        # dice loss
+        dice = self.dice_loss(pred_seg, gt_seg)
+        # mean square error of distance maps and their gradients
+        mse = F.mse_loss(pred_hv, gt_hv)
+        msge = self.msge_loss(pred_hv, gt_hv, gt_seg)
+        # mean square error for dot and distance maps
+        ddmse = self.dot_distance_loss(pred_dot, pred_hv, gt_dot, gt_hv)
+        
+        loss = bce * self.weights[0] + mbce * self.weights[1] + dice * self.weights[2] + mse * self.weights[3] + msge * self.weights[4] + ddmse * self.weights[5]
+
+        if contain == 'single':
+            return loss
+        
+        names = ('loss', 'bce', 'mbce', 'dice', 'mse', 'msge', 'ddmse')
+        losses = [loss, bce, mbce, dice, mse, msge, ddmse]
+        # if prefix is not None:
+        #     names = ['{}_{}'.format(prefix, n) for n in names]
+        return {name: loss for name, loss in zip(names, losses)}
