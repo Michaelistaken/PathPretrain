@@ -406,7 +406,6 @@ class ModelTrainer:
             y_pred = self.model(X) if Z is None else self.model(X,Z)
             # y_true=y_true.argmax(dim=1)
 
-            loss = self.calc_loss(y_pred, y_true.float())  # .view(-1,1)
             loss = self.calc_loss(y_pred, y_true)  # .view(-1,1)
             train_loss = loss.item()
             running_loss += train_loss
@@ -473,6 +472,7 @@ class ModelTrainer:
                 # y_true=y_true.argmax(dim=1)
                 # if save_predictions:
                 Y['true'].append(
+                    y_true.detach().cpu().numpy().astype(int).flatten())
                 y_pred_numpy = ((y_pred if self.bce else self.sigmoid(
                     y_pred)).detach().cpu().numpy()).astype(float)
                 if self.loss_fn_name in ['ce','dice','dice1','dicebce','custom']:
@@ -789,6 +789,7 @@ class DiceBCELoss(nn.Module):
 
         intersection = (inputs * targets).sum()
         dice_loss = 1 - (2.*intersection + smooth)/(inputs.sum() + targets.sum() + smooth)
+
         BCE = F.binary_cross_entropy(inputs, targets, reduction='mean')
         Dice_BCE = BCE + dice_loss
 
