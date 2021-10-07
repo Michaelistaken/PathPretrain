@@ -406,7 +406,7 @@ class ModelTrainer:
             y_pred = self.model(X) if Z is None else self.model(X,Z)
             # y_true=y_true.argmax(dim=1)
 
-            loss = self.calc_loss(y_pred, y_true)  # .view(-1,1)
+            loss = self.calc_loss(y_pred, y_true.float())  # .view(-1,1)
             train_loss = loss.item()
             running_loss += train_loss
             self.optimizer.zero_grad()
