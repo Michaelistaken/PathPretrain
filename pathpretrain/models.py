@@ -19,6 +19,7 @@ from sklearn.utils.class_weight import compute_class_weight
 from kornia.losses import DiceLoss
 import  kornia.losses as kl
 import tqdm
+from loss_functions import *
 
 matplotlib.use('Agg')
 sns.set()
@@ -211,7 +212,10 @@ class ModelTrainer:
         optimizers = {'adam': torch.optim.Adam, 'sgd': torch.optim.SGD}
         loss_functions = {'bce': nn.BCEWithLogitsLoss(reduction=reduction), 'ce': nn.CrossEntropyLoss(
             reduction=reduction), 'mse': nn.MSELoss(reduction=reduction), 
-            'nll': nn.NLLLoss(reduction=reduction),'dice':DiceLoss(),'custom':CustomLoss(), 'bfll':kl.BinaryFocalLossWithLogits(alpha=0.25),'focal':kl.FocalLoss(alpha=0.5),'tvl':kl.TverskyLoss(alpha=0.5, beta=0.5)}
+            'nll': nn.NLLLoss(reduction=reduction),'dice':DiceLoss(),'custom':CustomLoss(), 
+            'kbfll':kl.BinaryFocalLossWithLogits(alpha=0.25),'kfocal':kl.FocalLoss(alpha=0.5),
+            'ktvl':kl.TverskyLoss(alpha=0.5, beta=0.5),
+            'dice1':DiceLoss1(),'dicebce':DiceBCELoss()}
         if 'name' not in list(optimizer_opts.keys()):
             optimizer_opts['name'] = 'adam'
         self.optimizer = optimizers[optimizer_opts.pop('name')](
@@ -746,3 +750,42 @@ class CustomLoss(nn.Module):
         # if prefix is not None:
         #     names = ['{}_{}'.format(prefix, n) for n in names]
         return {name: loss for name, loss in zip(names, losses)}
+
+
+class DiceLoss1(nn.Module):
+    def __init__(self, weight=None, size_average=True):
+        super(DiceLoss, self).__init__()
+
+    def forward(self, inputs, targets, smooth=1):
+
+        #comment out if your model contains a sigmoid or equivalent activation layer
+        #inputs = torch.sigmoid(inputs)
+
+        #flatten label and prediction tensors
+        inputs = inputs.view(-1)
+        targets = targets.view(-1)
+
+        intersection = (inputs * targets).sum()
+        dice = (2.*intersection + smooth)/(inputs.sum() + targets.sum() + smooth)
+
+        return 1 - dice
+
+class DiceBCELoss(nn.Module):
+    def __init__(self, weight=None, size_average=True):
+        super(DiceBCELoss, self).__init__()
+
+    def forward(self, inputs, targets, smooth=1):
+
+        #comment out if your model contains a sigmoid or equivalent activation layer
+        #inputs = torch.sigmoid(inputs)
+
+        #flatten label and prediction tensors
+        inputs = inputs.view(-1)
+        targets = targets.view(-1)
+
+        intersection = (inputs * targets).sum()
+        dice_loss = 1 - (2.*intersection + smooth)/(inputs.sum() + targets.sum() + smooth)
+        BCE = F.binary_cross_entropy(inputs, targets, reduction='mean')
+        Dice_BCE = BCE + dice_loss
+
+        return Dice_BCE
