@@ -19,7 +19,7 @@ from sklearn.utils.class_weight import compute_class_weight
 from kornia.losses import DiceLoss
 import  kornia.losses as kl
 import tqdm
-from loss_functions import *
+
 
 matplotlib.use('Agg')
 sns.set()
