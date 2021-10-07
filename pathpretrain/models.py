@@ -211,7 +211,7 @@ class ModelTrainer:
         optimizers = {'adam': torch.optim.Adam, 'sgd': torch.optim.SGD}
         loss_functions = {'bce': nn.BCEWithLogitsLoss(reduction=reduction), 'ce': nn.CrossEntropyLoss(
             reduction=reduction), 'mse': nn.MSELoss(reduction=reduction), 
-            'nll': nn.NLLLoss(reduction=reduction),'dice':DiceLoss(),'custom':CustomLoss(), 'bfll':kl.BinaryFocalLossWithLogits(alpha=0.25),'focal':kl.FocalLoss(alpha=0.5),'tvl':kl.TverskyLoss(alpha=0.5)}
+            'nll': nn.NLLLoss(reduction=reduction),'dice':DiceLoss(),'custom':CustomLoss(), 'bfll':kl.BinaryFocalLossWithLogits(alpha=0.25),'focal':kl.FocalLoss(alpha=0.5),'tvl':kl.TverskyLoss(alpha=0.5, beta=0.5)}
         if 'name' not in list(optimizer_opts.keys()):
             optimizer_opts['name'] = 'adam'
         self.optimizer = optimizers[optimizer_opts.pop('name')](
