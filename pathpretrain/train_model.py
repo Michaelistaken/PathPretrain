@@ -115,7 +115,7 @@ class SegmentationTransform(nn.Module):
         else:
             img=self.normalize(self.crop(self.resize(input)))
             mask_out=self.mask_crop(self.mask_resize(mask))
-        return img,mask_out.squeeze(1).long()#[:,0,...]
+        return img,mask_out.squeeze(1)#.long()#[:,0,...]
 
 def generate_kornia_segmentation_transforms(image_size=224, resize=256, mean=[], std=[], include_jitter=False):  # add this then IoU metric
     mean=torch.tensor(mean) if mean else torch.tensor([0.5, 0.5, 0.5])
