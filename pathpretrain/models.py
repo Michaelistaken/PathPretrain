@@ -472,10 +472,10 @@ class ModelTrainer:
                 # y_true=y_true.argmax(dim=1)
                 # if save_predictions:
                 Y['true'].append(
-                    y_true.detach().cpu().numpy().astype(int).flatten())
-                y_pred_numpy = ((y_pred if not self.bce else self.sigmoid(
+                    y_true.detach().cpu().numpy().astype(float).flatten())
+                y_pred_numpy = ((y_pred if self.bce else self.sigmoid(
                     y_pred)).detach().cpu().numpy()).astype(float)
-                if self.loss_fn_name in ['ce','dice']:
+                if self.loss_fn_name in ['ce','dice','dice1']:
                     y_pred_numpy = y_pred_numpy.argmax(axis=1)
                 Y['pred'].append(y_pred_numpy.flatten())
 
@@ -486,7 +486,9 @@ class ModelTrainer:
                     print("Epoch {}[{}/{}] Val Loss:{}".format(epoch, i, n_batch, val_loss))
         # if print_val_confusion and save_predictions:
         y_pred, y_true = np.hstack(Y['pred']), np.hstack(Y['true'])
-        #print(classification_report(y_true, y_pred))
+        print("y_true: " + y_true.dtype)
+        print("y_pred: " + y_pred.dtype)   
+        print(classification_report(y_true, y_pred))
         running_loss /= n_batch
         return running_loss, f1_score(y_true, y_pred,average='macro')
 
