@@ -720,8 +720,8 @@ class CustomLoss(nn.Module):
         # transpose gts to channel last
         #gts = gts.permute(0, 2, 3, 1)
         gt_seg, gt_hv, gt_dot = torch.split(gts[..., :4], [1, 2, 1], dim=-1)
-        pred_seg, pred_hv, pred_dot = torch.split(preds, [1, 2, 1], dim=-1)
-
+        #pred_seg, pred_hv, pred_dot = torch.split(preds, [1, 2, 1], dim=-1)
+        pred_seg, pred_hv, pred_dot = torch.split(preds, 256, dim=-1)
         # binary cross entropy loss
         bce = F.binary_cross_entropy(pred_seg, gt_seg)
         # masked binary cross entropy loss
