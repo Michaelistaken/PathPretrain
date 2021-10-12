@@ -529,11 +529,13 @@ class ModelTrainer:
 
                 prediction = self.model(X) if Z is None else self.model(X,Z)
                 if(self.num_classes>1):
-                    prediction=F.softmax(prediction, dim=1)
+                    prediction=F.softmax(prediction, dim=1)[0]
                 else:
-                    prediction=torch.sigmoid(prediction)
-                y_pred.append(prediction[0].detach().cpu().numpy()) #y_pred.append(prediction.detach().cpu().numpy())
-                Y_true.append(y_true.detach().cpu().numpy()) #Y_true.append(y_true.detach().cpu().numpy())
+                    prediction=torch.sigmoid(prediction)[0]
+
+                print(str(i))
+                y_pred.append(prediction.detach().cpu().numpy())
+                Y_true.append(y_true.detach().cpu().numpy())
 
         y_pred = np.concatenate(y_pred, axis=0)  # torch.cat(y_pred,0)
         y_true = np.concatenate(Y_true, axis=0).flatten()
