@@ -527,6 +527,7 @@ class ModelTrainer:
                     y_true = y_true.cuda()
                     if Z is not None: Z=Z.cuda()
 
+                prediction = self.model(X) if Z is None else self.model(X,Z)
                 if(self.num_classes>1):
                     prediction=F.softmax(prediction, dim=1)
                 else:
