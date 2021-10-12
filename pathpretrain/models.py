@@ -516,6 +516,7 @@ class ModelTrainer:
         running_loss = 0.
         n_batch = len(
             test_dataloader.dataset) // test_dataloader.batch_size
+        print(str(n_batch))
         with torch.no_grad():
             for i, batch in tqdm.tqdm(enumerate(test_dataloader),total=n_batch):
                 #X = Variable(batch[0],requires_grad=False)
