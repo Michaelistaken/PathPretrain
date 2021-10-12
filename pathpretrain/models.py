@@ -532,8 +532,8 @@ class ModelTrainer:
                     prediction=F.softmax(prediction, dim=1)
                 else:
                     prediction=torch.sigmoid(prediction)
-                y_pred.append(prediction) #y_pred.append(prediction.detach().cpu().numpy())
-                Y_true.append(y_true) #Y_true.append(y_true.detach().cpu().numpy())
+                y_pred.append(prediction[0].detach().cpu().numpy()) #y_pred.append(prediction.detach().cpu().numpy())
+                Y_true.append(y_true.detach().cpu().numpy()) #Y_true.append(y_true.detach().cpu().numpy())
 
         y_pred = np.concatenate(y_pred, axis=0)  # torch.cat(y_pred,0)
         y_true = np.concatenate(Y_true, axis=0).flatten()
