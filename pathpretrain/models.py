@@ -205,9 +205,10 @@ class ModelTrainer:
             Number of training batches for epoch.
     """
 
-    def __init__(self, model, n_epoch=300, validation_dataloader=None, optimizer_opts=dict(name='adam', lr=1e-3, weight_decay=1e-4), scheduler_opts=dict(scheduler='warm_restarts', lr_scheduler_decay=0.5, T_max=10, eta_min=5e-8, T_mult=2), loss_fn='ce', reduction='mean', num_train_batches=None, opt_level='O1', checkpoints_dir='checkpoints',tensor_dataset=False,transforms=None,semantic_segmentation=False,save_metric='loss',save_after_n_batch=0):
+    def __init__(self, model, n_epoch=300, validation_dataloader=None, optimizer_opts=dict(name='adam', lr=1e-3, weight_decay=1e-4), scheduler_opts=dict(scheduler='warm_restarts', lr_scheduler_decay=0.5, T_max=10, eta_min=5e-8, T_mult=2), loss_fn='ce', reduction='mean', num_train_batches=None, opt_level='O1', checkpoints_dir='checkpoints',tensor_dataset=False,transforms=None,semantic_segmentation=False,save_metric='loss',save_after_n_batch=0,num_classes=1):
 
         self.model = model
+        self.num_classes=num_classes
         # self.amp_handle = amp.init(enabled=True)
         optimizers = {'adam': torch.optim.Adam, 'sgd': torch.optim.SGD}
         loss_functions = {'bce': nn.BCEWithLogitsLoss(reduction=reduction), 'ce': nn.CrossEntropyLoss(
@@ -526,9 +527,13 @@ class ModelTrainer:
                     y_true = y_true.cuda()
                     if Z is not None: Z=Z.cuda()
 
-                prediction = self.model(X) if Z is None else self.model(X,Z)
-                y_pred.append(prediction.detach().cpu().numpy())
-                Y_true.append(y_true.detach().cpu().numpy())
+                if(self.num_classes>1):
+                    prediction=F.softmax(prediction, dim=1)
+                else:
+                    prediction=torch.sigmoid(prediction)
+                y_pred.append(prediction) #y_pred.append(prediction.detach().cpu().numpy())
+                Y_true.append(y_true) #Y_true.append(y_true.detach().cpu().numpy())
+
         y_pred = np.concatenate(y_pred, axis=0)  # torch.cat(y_pred,0)
         y_true = np.concatenate(Y_true, axis=0).flatten()
         return y_pred,y_true
