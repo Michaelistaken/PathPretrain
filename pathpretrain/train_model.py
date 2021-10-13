@@ -220,8 +220,7 @@ def train_model(inputs_dir='inputs_training',
                            transforms=transformers,
                            semantic_segmentation=semantic_segmentation,
                            save_metric=save_metric,
-                           save_after_n_batch=save_after_n_batch,
-                           num_classes=1)
+                           save_after_n_batch=save_after_n_batch)
 
     if os.path.exists(pretrained_save_loc):
         trainer.model.load_state_dict(torch.load(pretrained_save_loc,map_location=f"cuda:{gpu_id}" if gpu_id>=0 else "cpu"))
