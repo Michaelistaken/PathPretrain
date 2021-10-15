@@ -102,7 +102,8 @@ def prepare_model(model_name,
                   remap_to_cpu=True,
                   remove_module=False,
                   semantic_segmentation=False,
-                  n_aux_features=None):
+                  n_aux_features=None,
+                  encoderweights="imagenet"):
     from pytorchcv.model_provider import get_model
     import segmentation_models_pytorch as smp
     """ https://raw.githubusercontent.com/osmr/imgclsmob/master/pytorch/utils.py
@@ -162,12 +163,12 @@ def prepare_model(model_name,
             net=AuxNet(net,n_aux_features)
 
     else:
-        net = smp.Unet(model_name, classes=num_classes, in_channels=in_channels)
+        net = smp.Unet(model_name,encoder_weights=encoderweights, classes=num_classes, in_channels=in_channels)
 
     return net
 
 
-def generate_model(architecture, num_classes, semantic_segmentation, pretrained=False, n_aux_features=None):
+def generate_model(architecture, num_classes, semantic_segmentation, pretrained=False, n_aux_features=None,encoderweights="imagenet"):
     #    from pytorchcv.pytorch.utils import prepare_model
     if os.path.exists(architecture):
         model = torch.load(architecture,map_location='cpu')
@@ -178,7 +179,8 @@ def generate_model(architecture, num_classes, semantic_segmentation, pretrained=
                           use_cuda=False,
                           num_classes=num_classes,
                           semantic_segmentation=semantic_segmentation,
-                          n_aux_features=n_aux_features)
+                          n_aux_features=n_aux_features,
+                          encoderweights=encoderweights)
     return model
 
 
