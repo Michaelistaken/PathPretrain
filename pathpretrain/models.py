@@ -531,10 +531,11 @@ class ModelTrainer:
 
                 prediction = self.model(X) if Z is None else self.model(X,Z)
                 #prediction=torch.sigmoid(prediction)[0]
-                prediction=torch.sigmoid(prediction)
-                #y_pred.append(prediction.detach().cpu().numpy())
+                #prediction=torch.sigmoid(prediction)
                 print(type(prediction))
-                y_pred.extend(prediction.detach().cpu().numpy())
+                #y_pred.append(prediction.detach().cpu().numpy())
+
+                #y_pred.extend(prediction.detach().cpu().numpy())
                 print(type(prediction.detach().cpu().numpy()))
                 Y_true.append(y_true.detach().cpu().numpy())
         y_pred = np.concatenate(y_pred, axis=0)  # torch.cat(y_pred,0)
