@@ -530,6 +530,7 @@ class ModelTrainer:
                     if Z is not None: Z=Z.cuda()
 
                 prediction = self.model(X) if Z is None else self.model(X,Z)
+                prediction=torch.sigmoid(prediction)[0]
                 y_pred.append(prediction.detach().cpu().numpy())
                 Y_true.append(y_true.detach().cpu().numpy())
         y_pred = np.concatenate(y_pred, axis=0)  # torch.cat(y_pred,0)
