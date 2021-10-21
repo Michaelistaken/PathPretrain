@@ -533,8 +533,7 @@ class ModelTrainer:
                 #prediction=torch.sigmoid(prediction)[0]
                 #prediction=torch.sigmoid(prediction)
                 print(type(prediction))
-                #y_pred.append(prediction.detach().cpu().numpy())
-
+                y_pred.append(prediction.detach().cpu().numpy())
                 #y_pred.extend(prediction.detach().cpu().numpy())
                 print(type(prediction.detach().cpu().numpy()))
                 Y_true.append(y_true.detach().cpu().numpy())
